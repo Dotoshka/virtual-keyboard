@@ -75,7 +75,6 @@ class Key {
         this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
         break;
       case "Done":
-        this.keyElement.classList.add("keyboard__key--dark");
         this.keyElement.innerHTML = this.createIconHTML("keyboard_hide");
         break;
       case "ControlLeft":

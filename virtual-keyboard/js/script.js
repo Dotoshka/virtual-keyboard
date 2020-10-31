@@ -25,13 +25,13 @@ class Key {
     this.small = small;
     this.shift = shift;
     this.isFnKey = Boolean(shift === null);
-    this.isLetter = Boolean(small.match(/^[a-zа-я]{1}$/));
     this.keyElement = document.createElement("button");
     this.keyElement.setAttribute("type", "button");
     this.keyElement.classList.add("keyboard__key");
     this.keyElement.dataset.code = code;
     this.isFnKey ? this.keyElement.dataset.fn = true : this.keyElement.dataset.fn = false;
-    this.isLetter ? this.keyElement.dataset.letter = true : this.keyElement.dataset.letter = false;
+    this.isLetter = this.checkLetters(this.small);
+    //this.isLetter ? this.keyElement.dataset.letter = true : this.keyElement.dataset.letter = false;
     //this.isFnKey ? this.keyElement.classList.add("keyboard__key--wide") : this.keyElement.classList;
 
     // Creates HTML for an icon
@@ -73,7 +73,16 @@ class Key {
     }
   }
   createIconHTML = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
-  createIconApple = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
+  //createIconApple = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
+  checkLetters = (small) => {
+    if (Boolean(small.match(/^[a-zA-Zа-яА-ЯёЁ]{1}$/))) {
+      this.keyElement.dataset.letter = true;
+      return true;
+    } else {
+      this.keyElement.dataset.letter = false;
+      return false;
+    }
+  }
 }
 
 class Keyboard {
@@ -81,7 +90,7 @@ class Keyboard {
   constructor(rowsOrder) {
     this.rowsOrder = rowsOrder;
     //console.log(rowsOrder);
-    //this.keysPressed = {};
+    this.keysPressed = {};
     this.isCaps = false;
     this.isShift = false;
     this.soundOn = false;
@@ -170,7 +179,7 @@ class Keyboard {
     //this.keysContainer.onmousedown = this.preHandleEvent;
     //this.keysContainer.onmouseup = this.preHandleEvent;
     //document.addEventListener('keypress', this.handleEvent);
-    this.keysContainer.addEventListener('click', this.clickHandleEvent)
+    this.keysContainer.addEventListener('click', this.clickHandleEvent);
 
   }
 
@@ -212,10 +221,11 @@ class Keyboard {
         keyBtn.classList.toggle('active', this.soundOn);
         if (this.soundOn) {
           keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
+          this.keysContainer.addEventListener('click', this.playSound)
         } else {
           keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
+          this.keysContainer.removeEventListener('click', this.playSound)
         }
-        //this.playSound();
         break;
       case 'AltRight':
         this.speechRecognition = !this.speechRecognition
@@ -230,6 +240,15 @@ class Keyboard {
     }
 
     this.printToOutput(keyObj, keyObj.keyElement.innerHTML);
+
+    if (keyBtn.classList.contains("active")) {
+      this.keysPressed[keyObj.code] = keyObj;
+      //console.log(this.keysPressed);
+    } else {
+      delete this.keysPressed[keyObj.code];
+      //console.log(this.keysPressed);
+    }
+    
 
     // if (!this.isCaps) {
     //   this.printToOutput(keyObj, this.isShift ? keyObj.shift : keyObj.small);
@@ -357,17 +376,18 @@ class Keyboard {
 
   switchLanguage = () => {
     let currLang = this.main.dataset.language;
-    console.log(currLang);
+    //console.log(currLang);
     const langAbbr = Object.keys(languages);
-    console.log(langAbbr);
+    //console.log(langAbbr);
     let currLangIndex = langAbbr.indexOf(currLang);
     let nextLangIndex = currLangIndex + 1 < langAbbr.length ? currLangIndex + 1 : 0;
-    console.log(currLangIndex);
-    console.log(nextLangIndex);
+    //console.log(currLangIndex);
+    //console.log(nextLangIndex);
 
     this.keyBase = languages[langAbbr[nextLangIndex]];
-    console.log(this.keyBase);
+    //console.log(this.keyBase);
     this.main.dataset.language = langAbbr[nextLangIndex];
+    
     window.localStorage.setItem('kbLang',langAbbr[nextLangIndex]);
 
     this.keyButtons.forEach((button) => {
@@ -377,9 +397,34 @@ class Keyboard {
       button.shift = keyObj.shift;
       button.small = keyObj.small;
       button.keyElement.innerHTML = keyObj.small;
+      button.isLetter = button.checkLetters(button.small);
+      //this.isCaps = false;
+      //this.isShift = false;
+      this.switchCase();
     });
   }
 
+  playSound = (event) => {
+    let currLang = this.main.dataset.language;
+    const keyBtn = event.target.closest('.keyboard__key');
+    if (!keyBtn) return;
+    //console.log(currLang);
+    const audio = document.querySelector(`audio[data-language="${currLang}"]`);
+    //console.log(audio);
+    //const key = document.querySelector(`div[data-key="${event.keyCode}"]`);
+    if (!audio) return;
+    
+    //key.classList.add('playing');
+    audio.currentTime = 0;
+    audio.play();
+  }
+
+  resetPressedButtons = (targetCode) => {
+    if (!this.keysPressed[targetCode]) return;
+    if (!this.isCaps) this.keysPressed[targetCode].div.classList.remove('active');
+    this.keysPressed[targetCode].div.removeEventListener('mouseleave', this.resetButtonState);
+    delete this.keysPressed[targetCode];
+  }
 
   // _createKeys() {
   //   const fragment = document.createDocumentFragment();

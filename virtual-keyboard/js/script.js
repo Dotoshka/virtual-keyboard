@@ -12,6 +12,26 @@ const rowsOrder = [
 ];
 
 
+// window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+// const recognition = new SpeechRecognition();
+// recognition.interimResults = true;
+// console.log(recognition);
+// recognition.lang = 'en-US';
+
+// recognition.addEventListener('result', e => {
+//   console.log(e.results);
+//   const transcript = Array.from(e.results)
+//     .map(result => result[0])
+//     .map(result => result.transcript)
+//     .join('');
+
+//   console.log(transcript);
+
+// });
+
+// recognition.addEventListener('end', recognition.start);
+
+
 
 // window.addEventListener("DOMContentLoaded", function () {
 //   Keyboard.init('en');
@@ -47,10 +67,10 @@ class Key {
         this.keyElement.classList.add("keyboard__key--activatable");
         this.keyElement.innerHTML = this.createIconHTML("keyboard_capslock");
         break;
-        // case "ShiftLeft":
-        // case "ShiftRight":
-        //   this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
-        //   break;
+      // case "ShiftLeft":
+      // case "ShiftRight":
+      //   this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
+      //   break;
       case "Enter":
         this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
         break;
@@ -228,14 +248,19 @@ class Keyboard {
         }
         break;
       case 'AltRight':
-        this.speechRecognition = !this.speechRecognition
+        this.speechRecognition = !this.speechRecognition;
+        console.log(this.speechRecognition);
         keyBtn.classList.toggle('active', this.speechRecognition);
         if (this.speechRecognition) {
+          this.recognizeSpeech();
           keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
+          recognition.addEventListener('end', recognition.start);
+          recognition.start();
         } else {
           keyBtn.innerHTML = keyObj.createIconHTML("mic");
+          recognition.removeEventListener('end', recognition.start);
+          recognition.stop();
         }
-        //this.recognizeSpeech();
         break;
     }
 
@@ -248,7 +273,7 @@ class Keyboard {
       delete this.keysPressed[keyObj.code];
       //console.log(this.keysPressed);
     }
-    
+
 
     // if (!this.isCaps) {
     //   this.printToOutput(keyObj, this.isShift ? keyObj.shift : keyObj.small);
@@ -387,8 +412,10 @@ class Keyboard {
     this.keyBase = languages[langAbbr[nextLangIndex]];
     //console.log(this.keyBase);
     this.main.dataset.language = langAbbr[nextLangIndex];
-    
-    window.localStorage.setItem('kbLang',langAbbr[nextLangIndex]);
+    recognition.lang = this.main.dataset.language;
+    //console.log(recognition.lang);
+    //console.log(recognition.lang);
+    window.localStorage.setItem('kbLang', langAbbr[nextLangIndex]);
 
     this.keyButtons.forEach((button) => {
       if (button.isFnKey) return;
@@ -413,10 +440,34 @@ class Keyboard {
     //console.log(audio);
     //const key = document.querySelector(`div[data-key="${event.keyCode}"]`);
     if (!audio) return;
-    
+
     //key.classList.add('playing');
     audio.currentTime = 0;
     audio.play();
+  }
+
+  recognizeSpeech = () => {
+    let cursorPos = this.output.selectionStart;
+    let left = this.output.value.slice(0, cursorPos);
+    let right = this.output.value.slice(cursorPos);
+
+    recognition.addEventListener('result', e => {
+
+      const transcript = Array.from(e.results)
+        .map(result => result[0])
+        .map(result => result.transcript)
+        .join('');
+
+      this.output.value = `${left}${transcript} ${right}`;
+
+      if (e.results[0].isFinal) {
+        cursorPos += transcript.length + 1;
+        this.output.setSelectionRange(cursorPos, cursorPos);
+        left = this.output.value.slice(0, cursorPos);
+        right = this.output.value.slice(cursorPos);  
+      }
+
+    });
   }
 
   resetPressedButtons = (targetCode) => {
@@ -564,5 +615,13 @@ class Keyboard {
 //   console.log(event.code);
 // })
 
-const lang = window.localStorage.getItem('kbLang') || 'ru';
+// Speech recognition
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.interimResults = true;
+
+const lang = window.localStorage.getItem('kbLang') || 'en';
+
+recognition.lang = lang;
+//console.log(recognition.lang);
 new Keyboard(rowsOrder).init(lang).createKeys();

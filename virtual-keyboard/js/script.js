@@ -215,8 +215,8 @@ class Keyboard {
     this.output.focus();
 
     if (code === 'CapsLock') {
-      //event.preventDefault();
-      this.isCaps = !this.isCaps;
+      event.preventDefault();
+      this.isCaps = event.getModifierState('CapsLock');
       keyBtn.classList.toggle('active', this.isCaps);
       keyBtn.classList.toggle('keyboard__key--active', this.isCaps);
       this.switchCase();
@@ -297,6 +297,8 @@ class Keyboard {
       if (this.isCaps && !this.isShift) {
         if (button.isLetter) {
           button.keyElement.innerHTML = button.shift;
+        } else {
+          button.keyElement.innerHTML = button.small;
         }
       } else if (!this.isCaps && this.isShift) {
         button.keyElement.innerHTML = button.shift;

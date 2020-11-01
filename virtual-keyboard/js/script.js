@@ -57,10 +57,10 @@ class Key {
         this.keyElement.innerHTML = `${this.createIconHTML("language")}<br>${lang}`;
         break;
       case "AltLeft":
-        this.keyElement.innerHTML = this.createIconHTML("volume_up");
+        this.keyElement.innerHTML = this.createIconHTML("volume_off");
         break;
       case "AltRight":
-        this.keyElement.innerHTML = this.createIconHTML("mic");
+        this.keyElement.innerHTML = this.createIconHTML("mic_off");
         break;
       case "ArrowLeft":
         this.keyElement.innerHTML = this.createIconHTML("keyboard_arrow_left");
@@ -177,11 +177,11 @@ class Keyboard {
         this.soundOn = !this.soundOn
         keyBtn.classList.toggle('active', this.soundOn);
         if (this.soundOn) {
-          keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
+          keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
           this.keysContainer.addEventListener('click', this.playSound);
           document.addEventListener('keydown', this.playSound);
         } else {
-          keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
+          keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
           this.keysContainer.removeEventListener('click', this.playSound);
           document.removeEventListener('keydown', this.playSound);
         }
@@ -191,11 +191,11 @@ class Keyboard {
         keyBtn.classList.toggle('active', this.voiceOn);
         if (this.voiceOn) {
           this.recognizeSpeech();
-          keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
+          keyBtn.innerHTML = keyObj.createIconHTML("mic");
           recognition.addEventListener('end', recognition.start);
           recognition.start();
         } else {
-          keyBtn.innerHTML = keyObj.createIconHTML("mic");
+          keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
           recognition.removeEventListener('end', recognition.start);
           recognition.stop();
         }
@@ -243,11 +243,11 @@ class Keyboard {
           this.soundOn = !this.soundOn
           keyBtn.classList.toggle('active', this.soundOn);
           if (this.soundOn) {
-            keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
+            keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
             this.keysContainer.addEventListener('click', this.playSound);
             document.addEventListener('keydown', this.playSound);
           } else {
-            keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
+            keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
             this.keysContainer.removeEventListener('click', this.playSound);
             document.removeEventListener('keydown', this.playSound);
           }
@@ -257,11 +257,11 @@ class Keyboard {
           keyBtn.classList.toggle('active', this.voiceOn);
           if (this.voiceOn) {
             this.recognizeSpeech();
-            keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
+            keyBtn.innerHTML = keyObj.createIconHTML("mic");
             recognition.addEventListener('end', recognition.start);
             recognition.start();
           } else {
-            keyBtn.innerHTML = keyObj.createIconHTML("mic");
+            keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
             recognition.removeEventListener('end', recognition.start);
             recognition.stop();
           }

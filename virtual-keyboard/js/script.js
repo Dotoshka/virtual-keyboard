@@ -31,8 +31,6 @@ const rowsOrder = [
 
 // recognition.addEventListener('end', recognition.start);
 
-
-
 // window.addEventListener("DOMContentLoaded", function () {
 //   Keyboard.init('en');
 // });
@@ -113,7 +111,7 @@ class Keyboard {
     this.isCaps = false;
     this.isShift = false;
     this.soundOn = false;
-    this.speechRecognition = false;
+    this.voiceOn = false;
   }
 
   // elements: {
@@ -193,8 +191,8 @@ class Keyboard {
       });
     });
 
-    document.addEventListener('keydown', this.handleEvent);
-    document.addEventListener('keyup', this.handleEvent);
+    document.addEventListener('keydown', this.pressHandleEvent);
+    document.addEventListener('keyup', this.pressHandleEvent);
     //this.keysContainer.onmousedown = this.preHandleEvent;
     //this.keysContainer.onmouseup = this.preHandleEvent;
     //document.addEventListener('keypress', this.handleEvent);
@@ -240,17 +238,19 @@ class Keyboard {
         keyBtn.classList.toggle('active', this.soundOn);
         if (this.soundOn) {
           keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
-          this.keysContainer.addEventListener('click', this.playSound)
+          this.keysContainer.addEventListener('click', this.playSound);
+          document.addEventListener('keydown', this.playSound);
         } else {
           keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
-          this.keysContainer.removeEventListener('click', this.playSound)
+          this.keysContainer.removeEventListener('click', this.playSound);
+          document.removeEventListener('keydown', this.playSound);
         }
         break;
       case 'AltRight':
-        this.speechRecognition = !this.speechRecognition;
-        console.log(this.speechRecognition);
-        keyBtn.classList.toggle('active', this.speechRecognition);
-        if (this.speechRecognition) {
+        this.voiceOn = !this.voiceOn;
+        console.log(this.voiceOn);
+        keyBtn.classList.toggle('active', this.voiceOn);
+        if (this.voiceOn) {
           this.recognizeSpeech();
           keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
           recognition.addEventListener('end', recognition.start);
@@ -263,7 +263,7 @@ class Keyboard {
         break;
     }
 
-    this.printToOutput(keyObj, keyObj.keyElement.innerHTML);
+    this.printToOutput(keyObj, keyObj.keyElement.innerText);
 
     if (keyBtn.classList.contains("active")) {
       this.keysPressed[keyObj.code] = keyObj;
@@ -272,40 +272,33 @@ class Keyboard {
       delete this.keysPressed[keyObj.code];
       //console.log(this.keysPressed);
     }
-
-
-    // if (!this.isCaps) {
-    //   this.printToOutput(keyObj, this.isShift ? keyObj.shift : keyObj.small);
-    // } else if (this.isCaps) {
-    //     if (this.isShift) {
-    //     this.printToOutput(keyObj, keyObj.isLetter ? keyObj.small : keyObj.shift);
-    //   } else {
-    //     this.printToOutput(keyObj, keyObj.isLetter ? keyObj.shift : keyObj.small);
-    //   }
-    // }
   };
 
-  handleEvent = (event) => {
+  pressHandleEvent = (event) => {
     if (event.stopPropagation) event.stopPropagation();
     const type = event.type;
     const code = event.code;
+
     const keyObj = this.keyButtons.find((key) => key.code === code);
     if (!keyObj) return;
+    const keyBtn = keyObj.keyElement;
     this.output.focus();
     console.log(type);
     console.log(code);
-    //if (type === 'keydown') event.preventDefault();
-    if (type === 'keydown' || type === 'mousedown') {
 
-      //console.log(code.match(/Caps/));
-      //keyObj.keyElement.classList.add('active');
+    if (code === 'CapsLock') {
+      event.preventDefault();
+      this.isCaps = !this.isCaps;
+      //console.log(this.isCaps);
+      keyBtn.classList.toggle('active', this.isCaps);
+      keyBtn.classList.toggle('keyboard__key--active', this.isCaps);
+      this.switchCase();
+    }
+
+    if (type === 'keydown') {
+      event.preventDefault();
 
       switch (code) {
-        // case 'CapsLock':
-        //   this.isCaps = !this.isCaps;
-        //   console.log(this.isCaps);
-        //   keyObj.keyElement.classList.toggle('active', this.isCaps);
-        //   break;
         case 'ShiftLeft':
         case 'ShiftRight':
           this.isShift = !this.isShift;
@@ -314,24 +307,61 @@ class Keyboard {
           const shiftRight = this.keyButtons.find((key) => key.code === 'ShiftRight');
           shiftLeft.keyElement.classList.toggle('active', this.isShift);
           shiftRight.keyElement.classList.toggle('active', this.isShift);
-          //keyObj.keyElement.classList.toggle('active', this.isShift);
+          this.switchCase();
+          break;
+        case 'ControlLeft':
+          this.switchLanguage();
+          keyBtn.innerHTML = `${keyObj.createIconHTML("language")}<br>${this.main.dataset.language}`;
+          break;
+        case 'AltLeft':
+          this.soundOn = !this.soundOn
+          keyBtn.classList.toggle('active', this.soundOn);
+          if (this.soundOn) {
+            keyBtn.innerHTML = keyObj.createIconHTML("volume_off");
+            this.keysContainer.addEventListener('click', this.playSound);
+            document.addEventListener('keydown', this.playSound);
+          } else {
+            keyBtn.innerHTML = keyObj.createIconHTML("volume_up");
+            this.keysContainer.removeEventListener('click', this.playSound);
+            document.removeEventListener('keydown', this.playSound);
+          }
+          break;
+        case 'AltRight':
+          this.voiceOn = !this.voiceOn;
+          console.log(this.voiceOn);
+          keyBtn.classList.toggle('active', this.voiceOn);
+          if (this.voiceOn) {
+            this.recognizeSpeech();
+            keyBtn.innerHTML = keyObj.createIconHTML("mic_off");
+            recognition.addEventListener('end', recognition.start);
+            recognition.start();
+          } else {
+            keyBtn.innerHTML = keyObj.createIconHTML("mic");
+            recognition.removeEventListener('end', recognition.start);
+            recognition.stop();
+          }
           break;
         default:
           keyObj.keyElement.classList.add('active');
           break;
       }
 
+      this.printToOutput(keyObj, keyObj.keyElement.innerText);
 
+    } else if (type === 'keyup') {
 
-    } else if (type === 'keyup' || type === 'mouseup') {
-
-      if (!code.match(/Caps/) && !code.match(/Shift/)) {
-        keyObj.keyElement.classList.remove('active');
+      switch (code) {
+        case 'ShiftLeft':
+        case 'ShiftRight':
+        case 'ControlLeft':
+        case 'AltLeft':
+        case 'AltRight':
+          break;
+        default:
+          keyObj.keyElement.classList.remove('active');
+          break;
       }
-
     }
-
-
   }
 
   switchCase = () => {
@@ -431,18 +461,22 @@ class Keyboard {
   }
 
   playSound = (event) => {
-    let currLang = this.main.dataset.language;
-    const keyBtn = event.target.closest('.keyboard__key');
-    if (!keyBtn) return;
-    //console.log(currLang);
-    const audio = document.querySelector(`audio[data-language="${currLang}"]`);
-    //console.log(audio);
-    //const key = document.querySelector(`div[data-key="${event.keyCode}"]`);
-    if (!audio) return;
 
-    //key.classList.add('playing');
-    audio.currentTime = 0;
-    audio.play();
+    let currLang = this.main.dataset.language;
+    const keysAudio = document.querySelector(`audio[data-language="${currLang}"]`);
+    if (!keysAudio) return;
+
+    if (event.type === 'click') {
+      const keyBtn = event.target.closest('.keyboard__key');
+      if (!keyBtn) return;
+    } else if (event.type === 'keydown') {
+      const keyObj = this.keyButtons.find((key) => key.code === event.code);
+      if (!keyObj) return;
+    }
+
+    keysAudio.currentTime = 0;
+    keysAudio.play();
+    
   }
 
   recognizeSpeech = () => {
@@ -463,133 +497,17 @@ class Keyboard {
         cursorPos += transcript.length + 1;
         this.output.setSelectionRange(cursorPos, cursorPos);
         left = this.output.value.slice(0, cursorPos);
-        right = this.output.value.slice(cursorPos);  
+        right = this.output.value.slice(cursorPos);
       }
 
     });
   }
 
-  resetPressedButtons = (targetCode) => {
-    if (!this.keysPressed[targetCode]) return;
-    if (!this.isCaps) this.keysPressed[targetCode].div.classList.remove('active');
-    this.keysPressed[targetCode].div.removeEventListener('mouseleave', this.resetButtonState);
-    delete this.keysPressed[targetCode];
-  }
-
-  // _createKeys() {
-  //   const fragment = document.createDocumentFragment();
-  //   const keyLayout = [
-  //     "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "backspace",
-  //     "q", "w", "e", "r", "t", "y", "u", "i", "o", "p",
-  //     "caps", "a", "s", "d", "f", "g", "h", "j", "k", "l", "enter",
-  //     "done", "z", "x", "c", "v", "b", "n", "m", ",", ".", "?",
-  //     "space"
-  //   ];
-
-  //   // Creates HTML for an icon
-  //   const createIconHTML = (icon_name) => {
-  //     return `<i class="material-icons">${icon_name}</i>`;
-  //   };
-
-  //   keyLayout.forEach(key => {
-  //     const keyElement = document.createElement("button");
-  //     const insertLineBreak = ["backspace", "p", "enter", "?"].indexOf(key) !== -1;
-
-  //     // Add attributes/classes
-  //     keyElement.setAttribute("type", "button");
-  //     keyElement.classList.add("keyboard__key");
-
-  //     switch (key) {
-  //       case "backspace":
-  //         keyElement.classList.add("keyboard__key--wide");
-  //         keyElement.innerHTML = createIconHTML("backspace");
-
-  //         keyElement.addEventListener("click", () => {
-  //           this.properties.value = this.properties.value.substring(0, this.properties.value.length - 1);
-  //           this._triggerEvent("oninput");
-  //         });
-
-  //         break;
-
-  //       case "caps":
-  //         keyElement.classList.add("keyboard__key--wide", "keyboard__key--activatable");
-  //         keyElement.innerHTML = createIconHTML("keyboard_capslock");
-
-  //         keyElement.addEventListener("click", () => {
-  //           this._toggleCapsLock();
-  //           keyElement.classList.toggle("keyboard__key--active", this.properties.capsLock);
-  //         });
-
-  //         break;
-
-  //       case "enter":
-  //         keyElement.classList.add("keyboard__key--wide");
-  //         keyElement.innerHTML = createIconHTML("keyboard_return");
-
-  //         keyElement.addEventListener("click", () => {
-  //           this.properties.value += "\n";
-  //           this._triggerEvent("oninput");
-  //         });
-
-  //         break;
-
-  //       case "space":
-  //         keyElement.classList.add("keyboard__key--extra-wide");
-  //         keyElement.innerHTML = createIconHTML("space_bar");
-
-  //         keyElement.addEventListener("click", () => {
-  //           this.properties.value += " ";
-  //           this._triggerEvent("oninput");
-  //         });
-
-  //         break;
-
-  //       case "done":
-  //         keyElement.classList.add("keyboard__key--wide", "keyboard__key--dark");
-  //         keyElement.innerHTML = createIconHTML("check_circle");
-
-  //         keyElement.addEventListener("click", () => {
-  //           this.close();
-  //           this._triggerEvent("onclose");
-  //         });
-
-  //         break;
-
-  //       default:
-  //         keyElement.textContent = key.toLowerCase();
-
-  //         keyElement.addEventListener("click", () => {
-  //           this.properties.value += this.properties.capsLock ? key.toUpperCase() : key.toLowerCase();
-  //           this._triggerEvent("oninput");
-  //         });
-
-  //         break;
-  //     }
-
-  //     fragment.appendChild(keyElement);
-
-  //     if (insertLineBreak) {
-  //       fragment.appendChild(document.createElement("br"));
-  //     }
-  //   });
-
-  //   return fragment;
-  // },
-
-  _triggerEvent(handlerName) {
-    if (typeof this.eventHandlers[handlerName] == "function") {
-      this.eventHandlers[handlerName](this.properties.value);
-    }
-  }
-
-  // _toggleCapsLock() {
-  //   this.properties.capsLock = !this.properties.capsLock;
-
-  //   for (const key of this.elements.keys) {
-  //     if (key.childElementCount === 0) {
-  //       key.textContent = this.properties.capsLock ? key.textContent.toUpperCase() : key.textContent.toLowerCase();
-  //     }
-  //   }
+  // resetPressedButtons = (targetCode) => {
+  //   if (!this.keysPressed[targetCode]) return;
+  //   if (!this.isCaps) this.keysPressed[targetCode].div.classList.remove('active');
+  //   this.keysPressed[targetCode].div.removeEventListener('mouseleave', this.resetButtonState);
+  //   delete this.keysPressed[targetCode];
   // }
 
   open() {
@@ -607,12 +525,6 @@ class Keyboard {
     this.output.blur();
   }
 };
-
-
-// document.addEventListener('keydown', (event) => {
-//   const keyName = event.key;
-//   console.log(event.code);
-// })
 
 // Speech recognition
 window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

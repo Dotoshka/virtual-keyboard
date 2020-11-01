@@ -34,19 +34,19 @@ class Key {
 
     switch (code) {
       case "Backspace":
-        this.keyElement.innerHTML = this.createIconHTML("backspace");
+        this.keyElement.innerHTML = this.createIconApple("keyboard-backspace");
         break;
       case "Tab":
         this.keyElement.innerHTML = this.createIconHTML("keyboard_tab");
         break;
       case "CapsLock":
         this.keyElement.classList.add("keyboard__key--activatable");
-        this.keyElement.innerHTML = this.createIconHTML("keyboard_capslock");
+        this.keyElement.innerHTML = this.createIconApple("apple-keyboard-caps");
         break;
-      // case "ShiftLeft":
-      // case "ShiftRight":
-      //   this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
-      //   break;
+      case "ShiftLeft":
+      case "ShiftRight":
+        this.keyElement.innerHTML = this.createIconApple("apple-keyboard-shift");
+        break;
       case "Enter":
         this.keyElement.innerHTML = this.createIconHTML("keyboard_return");
         break;
@@ -62,6 +62,12 @@ class Key {
       case "AltRight":
         this.keyElement.innerHTML = this.createIconHTML("mic");
         break;
+      case "ArrowLeft":
+        this.keyElement.innerHTML = this.createIconHTML("keyboard_arrow_left");
+        break;
+      case "ArrowRight":
+        this.keyElement.innerHTML = this.createIconHTML("keyboard_arrow_right");
+        break;
       default:
         this.keyElement.innerHTML = small;
         break;
@@ -69,7 +75,7 @@ class Key {
   }
 
   createIconHTML = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
-  //createIconApple = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
+  createIconApple = (icon_name) => `<span class="iconify" data-icon="mdi:${icon_name}" data-inline="false"></span>`;
 
   checkLetters = (small) => {
     if (Boolean(small.match(/^[a-zA-Zа-яА-ЯёЁ]{1}$/))) {

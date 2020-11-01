@@ -290,12 +290,12 @@ export default [
       code: 'AltRight',
     },
     {
-      small: '&larr;',
+      small: 'Arrow',
       shift: null,
       code: 'ArrowLeft',
     },
     {
-      small: '&rarr;',
+      small: 'Arrow',
       shift: null,
       code: 'ArrowRight',
     }

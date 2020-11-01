@@ -212,10 +212,10 @@ class Keyboard {
     const keyObj = this.keyButtons.find((key) => key.code === code);
     if (!keyObj) return;
     const keyBtn = keyObj.keyElement;
-    this.output.focus();
+    this.output.focus()
 
     if (code === 'CapsLock') {
-      event.preventDefault();
+      //event.preventDefault();
       this.isCaps = event.getModifierState('CapsLock');
       keyBtn.classList.toggle('active', this.isCaps);
       keyBtn.classList.toggle('keyboard__key--active', this.isCaps);
@@ -223,7 +223,7 @@ class Keyboard {
     }
 
     if (type === 'keydown') {
-      event.preventDefault();
+
 
       switch (code) {
         case 'ShiftLeft':
@@ -266,7 +266,12 @@ class Keyboard {
             recognition.stop();
           }
           break;
+        case 'ArrowLeft':
+        case 'ArrowRight':
+          keyObj.keyElement.classList.add('active');
+          return;
         default:
+          event.preventDefault();
           keyObj.keyElement.classList.add('active');
           break;
       }
@@ -365,7 +370,7 @@ class Keyboard {
     const langAbbr = Object.keys(languages);
     let currLangIndex = langAbbr.indexOf(currLang);
     let nextLangIndex = currLangIndex + 1 < langAbbr.length ? currLangIndex + 1 : 0;
-    
+
     this.keyBase = languages[langAbbr[nextLangIndex]];
     this.main.dataset.language = langAbbr[nextLangIndex];
     recognition.lang = langAbbr[nextLangIndex];

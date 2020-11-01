@@ -11,31 +11,13 @@ const rowsOrder = [
   ['Done', 'ControlLeft', 'AltLeft', 'MetaLeft', 'Space', 'MetaRight', 'AltRight', 'ArrowLeft', 'ArrowRight'],
 ];
 
+const lang = window.localStorage.getItem('kbLang') || 'en';
 
-// window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-// const recognition = new SpeechRecognition();
-// recognition.interimResults = true;
-// console.log(recognition);
-// recognition.lang = 'en-US';
-
-// recognition.addEventListener('result', e => {
-//   console.log(e.results);
-//   const transcript = Array.from(e.results)
-//     .map(result => result[0])
-//     .map(result => result.transcript)
-//     .join('');
-
-//   console.log(transcript);
-
-// });
-
-// recognition.addEventListener('end', recognition.start);
-
-// window.addEventListener("DOMContentLoaded", function () {
-//   Keyboard.init('en');
-// });
-
-
+// Speech recognition
+window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.interimResults = true;
+recognition.lang = lang;
 
 class Key {
   constructor({ small, shift, code }) {
@@ -49,10 +31,6 @@ class Key {
     this.keyElement.dataset.code = code;
     this.isFnKey ? this.keyElement.dataset.fn = true : this.keyElement.dataset.fn = false;
     this.isLetter = this.checkLetters(this.small);
-    //this.isLetter ? this.keyElement.dataset.letter = true : this.keyElement.dataset.letter = false;
-    //this.isFnKey ? this.keyElement.classList.add("keyboard__key--wide") : this.keyElement.classList;
-
-    // Creates HTML for an icon
 
     switch (code) {
       case "Backspace":
@@ -89,8 +67,10 @@ class Key {
         break;
     }
   }
+
   createIconHTML = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
   //createIconApple = (icon_name) => `<i class="material-icons">${icon_name}</i>`;
+
   checkLetters = (small) => {
     if (Boolean(small.match(/^[a-zA-Zа-яА-ЯёЁ]{1}$/))) {
       this.keyElement.dataset.letter = true;
@@ -106,67 +86,29 @@ class Keyboard {
 
   constructor(rowsOrder) {
     this.rowsOrder = rowsOrder;
-    //console.log(rowsOrder);
-    this.keysPressed = {};
     this.isCaps = false;
     this.isShift = false;
     this.soundOn = false;
     this.voiceOn = false;
   }
 
-  // elements: {
-  //   main: null,
-  //   keysContainer: null,
-  //   keys: []
-  // },
-
-  // eventHandlers: {
-  //   oninput: null,
-  //   onclose: null
-  // },
-
-  // properties: {
-  //   value: "",
-  //   capsLock: false
-  // },
-
   init(langCode) {
     // Create main elements
     this.keyBase = languages[langCode];
-    // console.log(this.keyBase);
-
     this.main = document.createElement("div");
     this.keysContainer = document.createElement("div");
 
     // Setup main elements
-    this.main.classList.add("keyboard", "1keyboard--hidden");
+    this.main.classList.add("keyboard", "keyboard--hidden");
     this.keysContainer.classList.add("keyboard__keys");
     this.main.dataset.language = langCode;
-    //this.keysContainer.appendChild(this.createKeys());
-    //this.keys = this.keysContainer.querySelectorAll(".keyboard__key");
-    //console.log(this.keys);
+
     // Add to DOM
     this.main.appendChild(this.keysContainer);
     document.body.prepend(this.main);
 
     this.output = document.querySelector(".use-keyboard-input");
     this.output.addEventListener("focus", () => this.open());
-    //this.output.focus();
-
-    // document.querySelectorAll(".use-keyboard-input").forEach(element => {
-    //     element.addEventListener("focus", () => {
-    //       this.open();
-    //     })
-    // })
-
-    // Automatically use keyboard for elements with .use-keyboard-input
-    // document.querySelectorAll(".use-keyboard-input").forEach(element => {
-    //   element.addEventListener("focus", () => {
-    //     this.open(element.value, currentValue => {
-    //       element.value = currentValue;
-    //     });
-    //   });
-    // });
 
     return this;
   }
@@ -175,12 +117,9 @@ class Keyboard {
     this.keyButtons = [];
     this.rowsOrder.forEach((row, i) => {
       const rowElement = document.createElement("div");
-      //console.log(rowElement);
       rowElement.classList.add("keyboard__row");
       rowElement.dataset.row = i + 1;
       this.keysContainer.appendChild(rowElement);
-      //const rowElement = create('div', 'keyboard__row', null, this.container, ['row', i + 1]);
-      //rowElement.style.gridTemplateColumns = `repeat(${row.length}, 1fr)`;
       row.forEach((code) => {
         const keyObj = this.keyBase.find((key) => key.code === code);
         if (keyObj) {
@@ -193,15 +132,12 @@ class Keyboard {
 
     document.addEventListener('keydown', this.pressHandleEvent);
     document.addEventListener('keyup', this.pressHandleEvent);
-    //this.keysContainer.onmousedown = this.preHandleEvent;
-    //this.keysContainer.onmouseup = this.preHandleEvent;
-    //document.addEventListener('keypress', this.handleEvent);
     this.keysContainer.addEventListener('click', this.clickHandleEvent);
 
   }
 
   clickHandleEvent = (event) => {
-    //event.stopPropagation();
+    event.stopPropagation();
     this.output.focus();
     const keyBtn = event.target.closest('.keyboard__key');
     if (!keyBtn) return;
@@ -211,7 +147,6 @@ class Keyboard {
     switch (code) {
       case 'CapsLock':
         this.isCaps = !this.isCaps;
-        console.log(this.isCaps);
         keyBtn.classList.toggle('active', this.isCaps);
         keyBtn.classList.toggle('keyboard__key--active', this.isCaps);
         this.switchCase();
@@ -219,7 +154,6 @@ class Keyboard {
       case 'ShiftLeft':
       case 'ShiftRight':
         this.isShift = !this.isShift;
-        console.log(this.isShift);
         const shiftLeft = this.keyButtons.find((key) => key.code === 'ShiftLeft');
         const shiftRight = this.keyButtons.find((key) => key.code === 'ShiftRight');
         shiftLeft.keyElement.classList.toggle('active', this.isShift);
@@ -248,7 +182,6 @@ class Keyboard {
         break;
       case 'AltRight':
         this.voiceOn = !this.voiceOn;
-        console.log(this.voiceOn);
         keyBtn.classList.toggle('active', this.voiceOn);
         if (this.voiceOn) {
           this.recognizeSpeech();
@@ -262,16 +195,7 @@ class Keyboard {
         }
         break;
     }
-
     this.printToOutput(keyObj, keyObj.keyElement.innerText);
-
-    if (keyBtn.classList.contains("active")) {
-      this.keysPressed[keyObj.code] = keyObj;
-      //console.log(this.keysPressed);
-    } else {
-      delete this.keysPressed[keyObj.code];
-      //console.log(this.keysPressed);
-    }
   };
 
   pressHandleEvent = (event) => {
@@ -283,13 +207,10 @@ class Keyboard {
     if (!keyObj) return;
     const keyBtn = keyObj.keyElement;
     this.output.focus();
-    console.log(type);
-    console.log(code);
 
     if (code === 'CapsLock') {
-      event.preventDefault();
+      //event.preventDefault();
       this.isCaps = !this.isCaps;
-      //console.log(this.isCaps);
       keyBtn.classList.toggle('active', this.isCaps);
       keyBtn.classList.toggle('keyboard__key--active', this.isCaps);
       this.switchCase();
@@ -302,7 +223,6 @@ class Keyboard {
         case 'ShiftLeft':
         case 'ShiftRight':
           this.isShift = !this.isShift;
-          console.log(this.isShift);
           const shiftLeft = this.keyButtons.find((key) => key.code === 'ShiftLeft');
           const shiftRight = this.keyButtons.find((key) => key.code === 'ShiftRight');
           shiftLeft.keyElement.classList.toggle('active', this.isShift);
@@ -328,7 +248,6 @@ class Keyboard {
           break;
         case 'AltRight':
           this.voiceOn = !this.voiceOn;
-          console.log(this.voiceOn);
           keyBtn.classList.toggle('active', this.voiceOn);
           if (this.voiceOn) {
             this.recognizeSpeech();
@@ -390,13 +309,18 @@ class Keyboard {
 
   printToOutput(keyObj, symbol) {
     let cursorPos = this.output.selectionStart;
+    let cursorPosEnd = this.output.selectionEnd;
     const left = this.output.value.slice(0, cursorPos);
-    const right = this.output.value.slice(cursorPos);
+    const right = this.output.value.slice(cursorPosEnd);
 
     switch (keyObj.code) {
       case 'Backspace':
-        this.output.value = `${left.slice(0, -1)}${right}`;
-        cursorPos -= 1;
+        if (cursorPos === cursorPosEnd) {
+          this.output.value = `${left.slice(0, -1)}${right}`;
+          cursorPos -= 1;
+        } else {
+          this.output.value = `${left}${right}`;
+        }
         break;
       case 'Tab':
         this.output.value = `${left}\t${right}`;
@@ -430,20 +354,13 @@ class Keyboard {
 
   switchLanguage = () => {
     let currLang = this.main.dataset.language;
-    //console.log(currLang);
     const langAbbr = Object.keys(languages);
-    //console.log(langAbbr);
     let currLangIndex = langAbbr.indexOf(currLang);
     let nextLangIndex = currLangIndex + 1 < langAbbr.length ? currLangIndex + 1 : 0;
-    //console.log(currLangIndex);
-    //console.log(nextLangIndex);
-
+    
     this.keyBase = languages[langAbbr[nextLangIndex]];
-    //console.log(this.keyBase);
     this.main.dataset.language = langAbbr[nextLangIndex];
-    recognition.lang = this.main.dataset.language;
-    //console.log(recognition.lang);
-    //console.log(recognition.lang);
+    recognition.lang = langAbbr[nextLangIndex];
     window.localStorage.setItem('kbLang', langAbbr[nextLangIndex]);
 
     this.keyButtons.forEach((button) => {
@@ -454,8 +371,6 @@ class Keyboard {
       button.small = keyObj.small;
       button.keyElement.innerHTML = keyObj.small;
       button.isLetter = button.checkLetters(button.small);
-      //this.isCaps = false;
-      //this.isShift = false;
       this.switchCase();
     });
   }
@@ -464,19 +379,27 @@ class Keyboard {
 
     let currLang = this.main.dataset.language;
     const keysAudio = document.querySelector(`audio[data-language="${currLang}"]`);
+    let uniqAudio = {};
+
     if (!keysAudio) return;
 
     if (event.type === 'click') {
       const keyBtn = event.target.closest('.keyboard__key');
       if (!keyBtn) return;
+      uniqAudio = document.querySelector(`audio[data-code="${keyBtn.dataset.code}"]`);
     } else if (event.type === 'keydown') {
       const keyObj = this.keyButtons.find((key) => key.code === event.code);
       if (!keyObj) return;
+      uniqAudio = document.querySelector(`audio[data-code="${event.code}"]`);
     }
 
-    keysAudio.currentTime = 0;
-    keysAudio.play();
-    
+    if (uniqAudio) {
+      uniqAudio.currentTime = 0;
+      uniqAudio.play();
+    } else {
+      keysAudio.currentTime = 0;
+      keysAudio.play();
+    }
   }
 
   recognizeSpeech = () => {
@@ -503,36 +426,15 @@ class Keyboard {
     });
   }
 
-  // resetPressedButtons = (targetCode) => {
-  //   if (!this.keysPressed[targetCode]) return;
-  //   if (!this.isCaps) this.keysPressed[targetCode].div.classList.remove('active');
-  //   this.keysPressed[targetCode].div.removeEventListener('mouseleave', this.resetButtonState);
-  //   delete this.keysPressed[targetCode];
-  // }
-
   open() {
-    //this.properties.value = initialValue || "";
-    //this.eventHandlers.oninput = oninput;
-    //this.eventHandlers.onclose = onclose;
     this.main.classList.remove("keyboard--hidden");
   }
 
   close() {
-    //this.properties.value = "";
-    //this.eventHandlers.oninput = oninput;
-    //this.eventHandlers.onclose = onclose;
     this.main.classList.add("keyboard--hidden");
     this.output.blur();
   }
 };
 
-// Speech recognition
-window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-const recognition = new SpeechRecognition();
-recognition.interimResults = true;
-
-const lang = window.localStorage.getItem('kbLang') || 'en';
-
-recognition.lang = lang;
-//console.log(recognition.lang);
+//Create keyboard
 new Keyboard(rowsOrder).init(lang).createKeys();
